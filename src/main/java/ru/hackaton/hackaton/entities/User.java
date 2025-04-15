@@ -6,8 +6,7 @@ import ru.hackaton.hackaton.enums.Role;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
-@Getter
+@Data
 @Entity
 @Table(name = "users")
 public class User {
