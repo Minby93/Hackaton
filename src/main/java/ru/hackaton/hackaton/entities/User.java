@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.hackaton.hackaton.enums.Role;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -29,7 +31,7 @@ public class User {
     private String fullName;
 
     @Column(name = "role")
-    private Role role;
+    private List<Role> role;
 
     @Override
     public String toString() {
@@ -38,7 +40,7 @@ public class User {
                 "\"email\":\"" + (email != null ? email : "") + "\"," +
                 "\"password\":\"" + (password != null ? password : "") + "\"," + // Маскируем пароль
                 "\"username\":\"" + (username != null ? username : "") + "\"," +
-                "\"FullName\":\"" + (fullName != null ? fullName : "") + "\"," +
+                "\"fullName\":\"" + (fullName != null ? fullName : "") + "\"," +
                 "\"role\":" + (role != null ? "\"" + role + "\"" : "null") +
                 "}";
     }

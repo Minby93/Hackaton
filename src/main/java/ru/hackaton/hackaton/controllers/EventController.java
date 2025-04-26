@@ -24,9 +24,9 @@ public class EventController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createEvent(@RequestBody Event event, Long adminID){
+    public ResponseEntity<String> createEvent(@RequestBody Event event){
         try{
-            return eventService.createEvent(event, adminID);
+            return eventService.createEvent(event);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
@@ -34,10 +34,10 @@ public class EventController {
 
     }
 
-    @PostMapping("/update")
-    public ResponseEntity<String> updateEvent(@RequestBody Event event, Long adminID){
+    @PostMapping("/update/{eventID}")
+    public ResponseEntity<String> updateEvent(@RequestBody Event event, @PathVariable Long eventID){
         try{
-            return eventService.updateEvent(event, adminID);
+            return eventService.updateEvent(event, eventID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
@@ -45,9 +45,9 @@ public class EventController {
     }
 
     @DeleteMapping("/delete/{eventID}")
-    public ResponseEntity<String> deleteEvent(@RequestParam Long eventID, Long adminID){
+    public ResponseEntity<String> deleteEvent(@RequestParam Long eventID){
         try{
-            return eventService.deleteEvent(eventID, adminID);
+            return eventService.deleteEvent(eventID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

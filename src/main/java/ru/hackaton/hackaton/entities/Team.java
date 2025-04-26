@@ -28,7 +28,7 @@ public class Team {
     @Column(name = "countOfMembers")
     private Integer countOfMembers;
 
-    @Column(name = "columnID")
+    @Column(name = "adminID")
     private Long adminID;
 
     @Column(name = "enterRequest")

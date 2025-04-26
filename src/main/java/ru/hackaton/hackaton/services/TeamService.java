@@ -7,6 +7,8 @@ import ru.hackaton.hackaton.entities.Team;
 import ru.hackaton.hackaton.repositories.TeamRepository;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,9 @@ public class TeamService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserService userService;
+
     /**
      * Создание команды
      */
@@ -30,11 +35,14 @@ public class TeamService {
 
             Team team = new Team();
 
+            Long adminID = userService.getCurrentUser().getId();
+
             team.setName(newTeam.getName());
-            // Достать ID авторизованного пользователя из контекста
-            //team.setAdminID();
-            //team.setListOfMembers();
+            team.setAdminID(adminID);
+            team.setListOfMembers(Arrays.asList(adminID));
             team.setCountOfMembers(1);
+
+            teamRepository.save(team);
 
             return ResponseEntity.status(200).body("Команда успешно создана!");
 
@@ -44,17 +52,14 @@ public class TeamService {
         }
     }
 
-    /**
-     * Возможность исключения из команды
-     * Возможность одобрения заявки на вступление
-     * Возможность отказа
-     */
 
     /**
      * Заявка на вступление в команду
      */
-    public ResponseEntity<String> enterTeam(Long userID, Long teamID){
+    public ResponseEntity<String> enterTeam(Long teamID){
         try{
+
+            Long userID = userService.getCurrentUser().getId();
 
             if (!userRepository.existsById(userID)){
                 return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
@@ -70,7 +75,16 @@ public class TeamService {
 
                 Team team = teamOpt.get();
 
-                //team.setEnterRequest(team.getEnterRequest().add());
+                List<Long> enterRequests = new ArrayList<>();
+                if (team.getEnterRequest() != null){
+                    enterRequests = team.getEnterRequest();
+                    enterRequests.add(userID);
+                }
+                else {
+                    enterRequests = List.of(userID);
+                }
+
+                team.setEnterRequest(enterRequests);
 
                 teamRepository.save(team);
 
@@ -88,8 +102,10 @@ public class TeamService {
     /**
      * Выход из команды
      */
-    public ResponseEntity<String> exitTeam(Long userID, Long teamID){
+    public ResponseEntity<String> exitTeam(Long teamID){
         try{
+
+            Long userID = userService.getCurrentUser().getId();
             if (!userRepository.existsById(userID)){
                 return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
             }
@@ -108,9 +124,9 @@ public class TeamService {
                     return ResponseEntity.status(400).body("Пользователь не состоит в данной команде!");
                 }
 
-                //team.getListOfMembers().remove(Long.valueOf());
+                team.getListOfMembers().remove(Long.valueOf(userID));
 
-                team.setListOfMembers(team.getListOfMembers());
+                teamRepository.save(team);
 
                 return ResponseEntity.status(200).body("Команда успешно покинута!");
             }
@@ -125,8 +141,11 @@ public class TeamService {
     /**
      * Принятие в команду лидером
      */
-    public ResponseEntity<String> acceptMember(Long userID, Long teamID, Long adminID){
+    public ResponseEntity<String> acceptMember(Long userID, Long teamID){
         try{
+
+            Long adminID = userService.getCurrentUser().getId();
+
             if (!userRepository.existsById(userID) || !userRepository.existsById(adminID)){
                 return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
             }
@@ -135,19 +154,27 @@ public class TeamService {
                 return ResponseEntity.status(400).body("Не найдена команда с таким ID!");
             }
 
+
+
             Optional<Team> teamOpt = teamRepository.findById(teamID);
 
             if (teamOpt.isPresent()){
 
                 Team team = teamOpt.get();
 
-                team.getListOfMembers().add(userID);
+                if (adminID == team.getAdminID()) {
 
-                team.getEnterRequest().remove(Long.valueOf(userID));
 
-                teamRepository.save(team);
+                    team.getListOfMembers().add(userID);
 
-                return ResponseEntity.status(200).body("Пользователь успешно был принят в команду!");
+                    team.getEnterRequest().remove(Long.valueOf(userID));
+
+                    teamRepository.save(team);
+
+                    return ResponseEntity.status(200).body("Пользователь успешно был принят в команду!");
+                }
+                else return ResponseEntity.status(400).body("У вас нет прав для одобрения заявки на вступление!");
+
 
             }
 
@@ -162,8 +189,10 @@ public class TeamService {
     /**
      * Отказ на принятие в команду лидером
      */
-    public ResponseEntity<String> declineMember(Long userID, Long teamID, Long adminID){
+    public ResponseEntity<String> declineMember(Long userID, Long teamID){
         try{
+            Long adminID = userService.getCurrentUser().getId();
+
             if (!userRepository.existsById(userID) || !userRepository.existsById(adminID)){
                 return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
             }
@@ -172,17 +201,25 @@ public class TeamService {
                 return ResponseEntity.status(400).body("Не найдена команда с таким ID!");
             }
 
+
+
             Optional<Team> teamOpt = teamRepository.findById(teamID);
 
             if (teamOpt.isPresent()){
 
                 Team team = teamOpt.get();
 
-                team.getEnterRequest().remove(Long.valueOf(userID));
+                if (adminID == team.getAdminID()) {
 
-                teamRepository.save(team);
 
-                return ResponseEntity.status(200).body("Пользователь успешно был принят в команду!");
+                    team.getEnterRequest().remove(Long.valueOf(userID));
+
+                    teamRepository.save(team);
+
+                    return ResponseEntity.status(200).body("Запрос на вступление был отклонен!");
+                }
+                else return ResponseEntity.status(400).body("У вас нет прав для отказа заявки на вступление!");
+
 
             }
 

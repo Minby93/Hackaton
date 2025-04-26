@@ -2,10 +2,7 @@ package ru.hackaton.hackaton.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.hackaton.hackaton.entities.Team;
 import ru.hackaton.hackaton.services.TeamService;
 
@@ -26,20 +23,20 @@ public class AdminTeamController {
         }
     }
 
-    @PostMapping("/accept")
-    public ResponseEntity<String> acceptMember(Long userID, Long teamID, Long adminID){
+    @PostMapping("/accept/{teamID}/{userID}")
+    public ResponseEntity<String> acceptMember(@PathVariable Long userID,@PathVariable Long teamID){
         try{
-            return teamService.acceptMember(userID,teamID,adminID);
+            return teamService.acceptMember(userID,teamID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
-    @PostMapping("/decline")
-    public ResponseEntity<String> declineMember(Long userID, Long teamID, Long adminID){
+    @PostMapping("/decline/{teamID}/{userID}")
+    public ResponseEntity<String> declineMember(@PathVariable Long userID, @PathVariable Long teamID){
         try{
-            return teamService.declineMember(userID, teamID, adminID);
+            return teamService.declineMember(userID, teamID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

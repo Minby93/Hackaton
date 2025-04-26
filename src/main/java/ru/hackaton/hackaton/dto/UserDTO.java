@@ -4,13 +4,15 @@ import lombok.Data;
 import ru.hackaton.hackaton.entities.User;
 import ru.hackaton.hackaton.enums.Role;
 
+import java.util.List;
+
 @Data
 public class UserDTO {
     private Long id;
     private String email;
     private String username;
     private String fullName;
-    private Role role;
+    private List<Role> role;
 
     public static UserDTO fromEntity(User user) {
         UserDTO dto = new UserDTO();

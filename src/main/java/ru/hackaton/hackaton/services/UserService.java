@@ -2,11 +2,15 @@ package ru.hackaton.hackaton.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ru.hackaton.hackaton.configs.MyUserDetails;
 import ru.hackaton.hackaton.entities.User;
 import ru.hackaton.hackaton.enums.Role;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @Service
@@ -14,6 +18,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Создание пользователя
@@ -33,9 +40,9 @@ public class UserService {
 
             user.setEmail(newUser.getEmail());
             user.setUsername(newUser.getUsername());
-            user.setPassword(newUser.getPassword());
+            user.setPassword(passwordEncoder.encode(newUser.getPassword())  );
             user.setFullName(newUser.getFullName());
-            user.setRole(Role.USER);
+            user.setRole(Arrays.asList(Role.USER));
 
             userRepository.save(user);
 
@@ -51,20 +58,22 @@ public class UserService {
      */
     public ResponseEntity<String> updateUser(User newUser, Long id){
         try{
-            // Тоже самое, что и в методе удаления пользователя
+            User currentUser = getCurrentUser();
 
-            User user = new User();
+            if(currentUser.getId() == id) {
+                User user = new User();
 
-            user.setEmail(newUser.getEmail());
-            user.setUsername(newUser.getUsername());
-            user.setPassword(newUser.getPassword());
-            user.setFullName(newUser.getFullName());
-            user.setRole(newUser.getRole() != null ? newUser.getRole() : Role.USER );
+                user.setEmail(newUser.getEmail());
+                user.setUsername(newUser.getUsername());
+                user.setPassword(newUser.getPassword());
+                user.setFullName(newUser.getFullName());
+                ////   user.getRole().add(newUser.getRole() != null ? newUser.getRole() : Role.USER );
 
-            userRepository.save(user);
+                userRepository.save(user);
 
-            return  ResponseEntity.status(200).body("Пользователь успешно изменён!");
-
+                return ResponseEntity.status(200).body("Пользователь успешно изменён!");
+            }
+            else return ResponseEntity.status(400).body("Вы не имеете права на изменение этого пользователя!");
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
@@ -77,7 +86,7 @@ public class UserService {
     public ResponseEntity<String> getUser(Long id){
         try {
 
-            if (userRepository.existsById(id)) {
+            if (!userRepository.existsById(id)) {
                 return ResponseEntity.status(400).body("Пользователя с таким ID не существует!");
             }
 
@@ -104,9 +113,7 @@ public class UserService {
      */
     public ResponseEntity<String> deleteUser(Long id){
         try{
-            /* Продумать ограничение на удаление не своих аккаунтов (есть возможность кинуть запрос на удаление подставив id другого пользователя)
-              Можно добавить в передаваемые параметры из контроллера ID пользователя, достав его из активной сессии
-             */
+
             if (userRepository.existsById(id)) {
                 return ResponseEntity.status(400).body("Пользователя с таким ID не существует!");
             }
@@ -117,9 +124,13 @@ public class UserService {
 
                 User user = userOpt.get();
 
-                userRepository.delete(user);
+                if (getCurrentUser().getId() == user.getId()) {
 
-                return ResponseEntity.status(200).body("Аккаунт успешно удален!");
+                    userRepository.delete(user);
+
+                    return ResponseEntity.status(200).body("Аккаунт успешно удален!");
+                }
+                else return ResponseEntity.status(400).body("Вы не имеете права на удаление этого пользователя!");
 
             }
             else {
@@ -132,6 +143,18 @@ public class UserService {
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
+
+    public User getCurrentUser(){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String username;
+        if (principal instanceof MyUserDetails) {
+            username = ((MyUserDetails)principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+
+        return userRepository.findByUsername(username).orElse(null);
     }
 
 }

@@ -2,10 +2,7 @@ package ru.hackaton.hackaton.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.hackaton.hackaton.services.TeamService;
 
 @RestController
@@ -15,20 +12,20 @@ public class UserTeamController {
     @Autowired
     private TeamService teamService;
 
-    @PostMapping("/enter")
-    public ResponseEntity<String> enterTeam(Long userID, Long teamID){
+    @PostMapping("/enter/{teamID}")
+    public ResponseEntity<String> enterTeam(@PathVariable Long teamID){
         try{
-            return teamService.enterTeam(userID, teamID);
+            return teamService.enterTeam(teamID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
-    @PostMapping("/exit")
-    public ResponseEntity<String> exitTeam(Long userID, Long teamID){
+    @PostMapping("/exit/{teamID}")
+    public ResponseEntity<String> exitTeam(@PathVariable Long teamID){
         try{
-            return teamService.exitTeam(userID, teamID);
+            return teamService.exitTeam(teamID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

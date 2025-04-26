@@ -18,11 +18,17 @@ public class EventService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserService userService;
+
     /**
      * Создание мероприятия
      */
-    public ResponseEntity<String> createEvent(Event newEvent, Long adminID){
+    public ResponseEntity<String> createEvent(Event newEvent){
         try{
+
+            Long adminID = userService.getCurrentUser().getId();
+
             if (eventRepository.existsByName(newEvent.getName())){
                 return ResponseEntity.status(400).body("Мероприятие с таким названием уже существует!");
             }
@@ -32,9 +38,9 @@ public class EventService {
             event.setAbout(newEvent.getAbout());
             event.setName(newEvent.getName());
             event.setAdminID(adminID);
-            event.setMaxMembers(event.getMaxMembers());
-            event.setStartTime(event.getStartTime());
-            event.setEndTime(event.getEndTime());
+            event.setMaxMembers(newEvent.getMaxMembers());
+            event.setStartTime(newEvent.getStartTime());
+            event.setEndTime(newEvent.getEndTime());
 
             eventRepository.save(event);
 
@@ -49,8 +55,10 @@ public class EventService {
     /**
      * Изменение мероприятия
      */
-    public ResponseEntity<String> updateEvent(Event newEvent, Long adminID){
+    public ResponseEntity<String> updateEvent(Event newEvent, Long eventID){
         try{
+            Long adminID = userService.getCurrentUser().getId();
+
             if (!eventRepository.existsByName(newEvent.getName())){
                 return ResponseEntity.status(400).body("Мероприятия с таким названием не существует!");
             }
@@ -58,18 +66,29 @@ public class EventService {
                 return ResponseEntity.status(400).body("Пользователя с таким ID не существует!");
             }
 
-            Event event = new Event();
+            Optional<Event> eventOpt = eventRepository.findById(eventID);
 
-            event.setAbout(newEvent.getAbout());
-            event.setName(newEvent.getName());
-            event.setAdminID(adminID);
-            event.setMaxMembers(event.getMaxMembers());
-            event.setStartTime(event.getStartTime());
-            event.setEndTime(event.getEndTime());
+            if (eventOpt.isPresent()) {
 
-            eventRepository.save(event);
+                Event event = eventOpt.get();
 
-            return ResponseEntity.status(200).body("Изменения успешно применены!");
+                if (adminID == event.getAdminID()) {
+
+                    event.setAbout(newEvent.getAbout());
+                    event.setName(newEvent.getName());
+                    event.setMaxMembers(newEvent.getMaxMembers());
+                    event.setStartTime(newEvent.getStartTime());
+                    event.setEndTime(newEvent.getEndTime());
+
+                    eventRepository.save(event);
+
+                    return ResponseEntity.status(200).body("Изменения успешно применены!");
+                }
+                else {
+                    return ResponseEntity.status(400).body("Вы не являетесь администратором данного мероприятия!");
+                }
+            }
+            else return ResponseEntity.status(500).body("Ошибка при получении информации о мероприятии!");
 
         }
         catch (Exception e){
@@ -80,8 +99,10 @@ public class EventService {
     /**
      * Удаление мероприятия
      */
-    public ResponseEntity<String> deleteEvent(Long eventID, Long adminID){
+    public ResponseEntity<String> deleteEvent(Long eventID){
         try{
+            Long adminID = userService.getCurrentUser().getId();
+
             if (!eventRepository.existsById(eventID)){
                 return ResponseEntity.status(400).body("Мероприятия с таким ID не существует!");
             }
@@ -93,13 +114,17 @@ public class EventService {
 
             if (eventOpt.isPresent()){
 
-                Event event = new Event();
+                Event event = eventOpt.get();
 
-                event = eventOpt.get();
+                if (event.getAdminID() == adminID) {
 
-                eventRepository.delete(event);
+                    event = eventOpt.get();
 
-                return ResponseEntity.status(200).body("Мероприятие успешно удалено!");
+                    eventRepository.delete(event);
+
+                    return ResponseEntity.status(200).body("Мероприятие успешно удалено!");
+                }
+                else return ResponseEntity.status(400).body("У вас нет права на удаления этого мероприятия!");
             }
 
             return ResponseEntity.status(500).body("Ошибка при получении информации о мероприятии!");
