@@ -61,17 +61,21 @@ public class UserService {
             User currentUser = getCurrentUser();
 
             if(currentUser.getId() == id) {
-                User user = new User();
 
-                user.setEmail(newUser.getEmail());
-                user.setUsername(newUser.getUsername());
-                user.setPassword(newUser.getPassword());
-                user.setFullName(newUser.getFullName());
-                ////   user.getRole().add(newUser.getRole() != null ? newUser.getRole() : Role.USER );
+                Optional<User> userOpt = userRepository.findById(id);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    user.setEmail(newUser.getEmail() != null ? newUser.getEmail() : user.getEmail());
+                    user.setUsername(newUser.getUsername() != null ? newUser.getUsername() : user.getUsername());
+                    user.setPassword(newUser.getPassword() != null ? newUser.getPassword() : user.getPassword());
+                    user.setFullName(newUser.getFullName() != null ? newUser.getFullName() : user.getFullName());
+                    ////   user.getRole().add(newUser.getRole() != null ? newUser.getRole() : Role.USER );
 
-                userRepository.save(user);
+                    userRepository.save(user);
 
-                return ResponseEntity.status(200).body("Пользователь успешно изменён!");
+                    return ResponseEntity.status(200).body("Пользователь успешно изменён!");
+                }
+                else return ResponseEntity.status(500).body("Ошибка при получении информации пользователя!");
             }
             else return ResponseEntity.status(400).body("Вы не имеете права на изменение этого пользователя!");
         }
@@ -114,7 +118,7 @@ public class UserService {
     public ResponseEntity<String> deleteUser(Long id){
         try{
 
-            if (userRepository.existsById(id)) {
+            if (!userRepository.existsById(id)) {
                 return ResponseEntity.status(400).body("Пользователя с таким ID не существует!");
             }
 

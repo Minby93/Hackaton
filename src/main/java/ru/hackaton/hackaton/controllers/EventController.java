@@ -14,7 +14,7 @@ public class EventController {
     private EventService eventService;
 
     @GetMapping("/{eventID}")
-    public ResponseEntity<String> getEvent(@RequestParam Long eventID){
+    public ResponseEntity<String> getEvent(@PathVariable Long eventID){
         try{
             return eventService.getEvent(eventID);
         }
@@ -45,7 +45,7 @@ public class EventController {
     }
 
     @DeleteMapping("/delete/{eventID}")
-    public ResponseEntity<String> deleteEvent(@RequestParam Long eventID){
+    public ResponseEntity<String> deleteEvent(@PathVariable Long eventID){
         try{
             return eventService.deleteEvent(eventID);
         }

@@ -2,17 +2,21 @@ package ru.hackaton.hackaton.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "events")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Event {
 
     @Id
@@ -23,11 +27,8 @@ public class Event {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "about")
-    private String about;
-
-    @Column(name = "teams")
-    private List<Long> teams;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "maxMembers")
     private Integer maxMembers;
@@ -38,20 +39,24 @@ public class Event {
     @Column(name = "endTime")
     private ZonedDateTime endTime;
 
-    @Column(name = "adminID")
-    private Long adminID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Team> teams = new ArrayList<>();
 
     @Override
     public String toString() {
         return "{" +
                 "\"id\":" + id + "," +
                 "\"name\":\"" + (name != null ? name : "") + "\"," +
-                "\"about\":\"" + (about != null ? about : "") + "\"," +
-                "\"teams\":\"" + (teams != null ? teams : "") + "\"," +
+                "\"description\":\"" + (description != null ? description : "") + "\"," +
+                "\"teams\":\"" + (teams != null ? teams.stream().map(Team::getId).toList() : "") + "\"," +
                 "\"maxMembers\":\"" + (maxMembers != null ? maxMembers : "") + "\"," +
-                "\"startTime\":" + (startTime != null ? "\"" + startTime + "\"" : "null") +
-                "\"endTime\":" + (endTime != null ? "\"" + endTime + "\"" : "null") +
-                "\"adminID\":" + (adminID != null ? "\"" + adminID + "\"" : "null") +
+                "\"startTime\":" + (startTime != null ? "\"" + startTime + "\"" : "null") + "," +
+                "\"endTime\":" + (endTime != null ? "\"" + endTime + "\"" : "null") + "," +
+                "\"createdBy\":" + (createdBy != null ? "\"" + createdBy.getId() + "\"" : "null") +
                 "}";
     }
 }

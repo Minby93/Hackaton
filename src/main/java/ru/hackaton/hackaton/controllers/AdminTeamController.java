@@ -13,10 +13,10 @@ public class AdminTeamController {
     @Autowired
     private TeamService teamService;
 
-    @PostMapping("/create")
-    public ResponseEntity<String> createTeam(@RequestBody Team team){
+    @PostMapping("/create/{eventID}")
+    public ResponseEntity<String> createTeam(@RequestBody Team team, @PathVariable Long eventID){
         try{
-            return teamService.createTeam(team);
+            return teamService.createTeam(team, eventID);
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

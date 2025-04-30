@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.hackaton.hackaton.entities.Event;
+import ru.hackaton.hackaton.entities.User;
 import ru.hackaton.hackaton.repositories.EventRepository;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
@@ -27,7 +28,7 @@ public class EventService {
     public ResponseEntity<String> createEvent(Event newEvent){
         try{
 
-            Long adminID = userService.getCurrentUser().getId();
+            User admin = userService.getCurrentUser();
 
             if (eventRepository.existsByName(newEvent.getName())){
                 return ResponseEntity.status(400).body("Мероприятие с таким названием уже существует!");
@@ -35,9 +36,9 @@ public class EventService {
 
             Event event = new Event();
 
-            event.setAbout(newEvent.getAbout());
+            event.setDescription(newEvent.getDescription());
             event.setName(newEvent.getName());
-            event.setAdminID(adminID);
+            event.setCreatedBy(admin);
             event.setMaxMembers(newEvent.getMaxMembers());
             event.setStartTime(newEvent.getStartTime());
             event.setEndTime(newEvent.getEndTime());
@@ -59,8 +60,8 @@ public class EventService {
         try{
             Long adminID = userService.getCurrentUser().getId();
 
-            if (!eventRepository.existsByName(newEvent.getName())){
-                return ResponseEntity.status(400).body("Мероприятия с таким названием не существует!");
+            if (!eventRepository.existsById(eventID)){
+                return ResponseEntity.status(400).body("Мероприятия с таким ID не существует!");
             }
             if (!userRepository.existsById(adminID)){
                 return ResponseEntity.status(400).body("Пользователя с таким ID не существует!");
@@ -72,9 +73,9 @@ public class EventService {
 
                 Event event = eventOpt.get();
 
-                if (adminID == event.getAdminID()) {
+                if (adminID == event.getCreatedBy().getId()) {
 
-                    event.setAbout(newEvent.getAbout());
+                    event.setDescription(newEvent.getDescription());
                     event.setName(newEvent.getName());
                     event.setMaxMembers(newEvent.getMaxMembers());
                     event.setStartTime(newEvent.getStartTime());
@@ -116,7 +117,7 @@ public class EventService {
 
                 Event event = eventOpt.get();
 
-                if (event.getAdminID() == adminID) {
+                if (event.getCreatedBy().getId() == adminID) {
 
                     event = eventOpt.get();
 

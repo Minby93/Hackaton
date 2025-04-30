@@ -2,8 +2,10 @@ package ru.hackaton.hackaton.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.hackaton.hackaton.enums.Role;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @AllArgsConstructor
@@ -11,6 +13,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "users")
+@Builder
 public class User {
 
     @Id
@@ -18,20 +21,25 @@ public class User {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "password")
     private String password;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
     private String username;
 
     @Column(name = "fullName")
     private String fullName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private List<Role> role;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Timestamp createdAt;
 
     @Override
     public String toString() {
@@ -41,7 +49,8 @@ public class User {
                 "\"password\":\"" + (password != null ? password : "") + "\"," + // Маскируем пароль
                 "\"username\":\"" + (username != null ? username : "") + "\"," +
                 "\"fullName\":\"" + (fullName != null ? fullName : "") + "\"," +
-                "\"role\":" + (role != null ? "\"" + role + "\"" : "null") +
+                "\"role\":" + (role != null ? "\"" + role + "\"" : "null") + "\"," +
+                "\"createdAt\":" + (createdAt != null ? "\"" + createdAt + "\"" : "null") +
                 "}";
     }
 }

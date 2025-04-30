@@ -3,7 +3,10 @@ package ru.hackaton.hackaton.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.hackaton.hackaton.entities.Event;
 import ru.hackaton.hackaton.entities.Team;
+import ru.hackaton.hackaton.entities.User;
+import ru.hackaton.hackaton.repositories.EventRepository;
 import ru.hackaton.hackaton.repositories.TeamRepository;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
@@ -24,23 +27,43 @@ public class TeamService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EventRepository eventRepository;
+
+
+    /**
+     * Нужно добавить метод для удаления команды,
+     * а так же запретить лидеру команды выходить из нее, если кто-то помимо него состоит в ней
+     *
+     * Рассмотреть вариант с ограничением участников в сущности команды, а не мероприятия
+     */
+
+
     /**
      * Создание команды
      */
-    public ResponseEntity<String> createTeam(Team newTeam){
+    public ResponseEntity<String> createTeam(Team newTeam, Long eventID){
         try{
             if(teamRepository.existsByName(newTeam.getName())){
                 return ResponseEntity.status(400).body("Команда с таким названием уже существует!");
             }
 
-            Team team = new Team();
+            if (!eventRepository.existsById(eventID)){
+                return ResponseEntity.status(400).body("Мероприятия с таким ID не найдено!");
+            }
 
-            Long adminID = userService.getCurrentUser().getId();
+            User leader = userService.getCurrentUser();
 
-            team.setName(newTeam.getName());
-            team.setAdminID(adminID);
-            team.setListOfMembers(Arrays.asList(adminID));
-            team.setCountOfMembers(1);
+            Event event = eventRepository.findById(eventID).get();
+
+
+            Team team = Team.builder()
+                    .name(newTeam.getName())
+                    .leader(leader)
+                    .members(new ArrayList<>(List.of(leader)))
+                    .countOfMembers(1)
+                    .event(event)
+                    .build();
 
             teamRepository.save(team);
 
@@ -115,16 +138,18 @@ public class TeamService {
             }
 
             Optional<Team> teamOpt = teamRepository.findById(teamID);
+            Optional<User> userOpt = userRepository.findById(userID);
 
-            if (teamOpt.isPresent()){
+            if (teamOpt.isPresent() && userOpt.isPresent()){
 
                 Team team = teamOpt.get();
+                User user = userOpt.get();
 
-                if (!team.getListOfMembers().contains(userID)){
+                if (!team.getMembers().contains(user)){
                     return ResponseEntity.status(400).body("Пользователь не состоит в данной команде!");
                 }
 
-                team.getListOfMembers().remove(Long.valueOf(userID));
+                team.getMembers().remove(user);
 
                 teamRepository.save(team);
 
@@ -144,9 +169,9 @@ public class TeamService {
     public ResponseEntity<String> acceptMember(Long userID, Long teamID){
         try{
 
-            Long adminID = userService.getCurrentUser().getId();
+            User leader = userService.getCurrentUser();
 
-            if (!userRepository.existsById(userID) || !userRepository.existsById(adminID)){
+            if (!userRepository.existsById(userID) || !userRepository.existsById(leader.getId())){
                 return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
             }
 
@@ -157,15 +182,17 @@ public class TeamService {
 
 
             Optional<Team> teamOpt = teamRepository.findById(teamID);
-
-            if (teamOpt.isPresent()){
+            Optional<User> userOpt = userRepository.findById(userID);
+            if (teamOpt.isPresent() && userOpt.isPresent()){
 
                 Team team = teamOpt.get();
+                User user = userOpt.get();
 
-                if (adminID == team.getAdminID()) {
+
+                if (leader == team.getLeader()) {
 
 
-                    team.getListOfMembers().add(userID);
+                    team.getMembers().add(user);
 
                     team.getEnterRequest().remove(Long.valueOf(userID));
 
@@ -209,8 +236,11 @@ public class TeamService {
 
                 Team team = teamOpt.get();
 
-                if (adminID == team.getAdminID()) {
+                if (!team.getEnterRequest().contains(Long.valueOf(userID))){
+                    return ResponseEntity.status(400).body("Нет заявок на вступление от пользователя с таким ID!");
+                }
 
+                if (adminID == team.getLeader().getId()) {
 
                     team.getEnterRequest().remove(Long.valueOf(userID));
 
