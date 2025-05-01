@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
+import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,12 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Builder
 public class Event {
+
+    /**
+     * Думаю, стоит добавить Integer переменную, в которой будет храниться статус мероприятия (Not Started(-1), Started(0), Ended(1))
+     *
+     * Нужно сделать так, чтобы это переменная автоматически менялась когда подошло время начала и конца меропрития.
+     */
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,11 +41,20 @@ public class Event {
     @Column(name = "maxMembers")
     private Integer maxMembers;
 
+    @Formula("""
+            CASE
+                WHEN NOW() < start_time THEN 'NOT_STRATED'
+                WHEN NOW() BETWEEN start_time AND end_time THEN 'STARTED'
+                WHEN NOW() > end_time THEN 'ENDED'
+            END
+            """)
+    private String status;
+
     @Column(name = "startTime")
-    private ZonedDateTime startTime;
+    private Timestamp startTime;
 
     @Column(name = "endTime")
-    private ZonedDateTime endTime;
+    private Timestamp endTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -56,7 +73,8 @@ public class Event {
                 "\"maxMembers\":\"" + (maxMembers != null ? maxMembers : "") + "\"," +
                 "\"startTime\":" + (startTime != null ? "\"" + startTime + "\"" : "null") + "," +
                 "\"endTime\":" + (endTime != null ? "\"" + endTime + "\"" : "null") + "," +
-                "\"createdBy\":" + (createdBy != null ? "\"" + createdBy.getId() + "\"" : "null") +
+                "\"createdBy\":" + (createdBy != null ? "\"" + createdBy.getId() + "\"" : "null") + "," +
+                "\"status\":\"" + status + "\"" +
                 "}";
     }
 }

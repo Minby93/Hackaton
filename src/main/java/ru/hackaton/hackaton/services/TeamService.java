@@ -30,18 +30,10 @@ public class TeamService {
     @Autowired
     private EventRepository eventRepository;
 
-
-    /**
-     * Нужно добавить метод для удаления команды,
-     * а так же запретить лидеру команды выходить из нее, если кто-то помимо него состоит в ней
-     *
-     * Рассмотреть вариант с ограничением участников в сущности команды, а не мероприятия
-     */
-
-
     /**
      * Создание команды
      */
+
     public ResponseEntity<String> createTeam(Team newTeam, Long eventID){
         try{
             if(teamRepository.existsByName(newTeam.getName())){
@@ -56,6 +48,9 @@ public class TeamService {
 
             Event event = eventRepository.findById(eventID).get();
 
+            if (event.getStatus().equals("STARTED") || event.getStatus().equals("ENDED")){
+                return ResponseEntity.status(400).body("В данном мероприятии уже нельзя принять участие, так как оно уже началось/закончилось!");
+            }
 
             Team team = Team.builder()
                     .name(newTeam.getName())
@@ -68,6 +63,45 @@ public class TeamService {
             teamRepository.save(team);
 
             return ResponseEntity.status(200).body("Команда успешно создана!");
+
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Удаление команды
+     */
+
+    public ResponseEntity<String> deleteTeam(Long teamID){
+        try{
+
+            Long userID = userService.getCurrentUser().getId();
+
+            if (!userRepository.existsById(userID)){
+                return ResponseEntity.status(400).body("Не найден пользователь с таким ID!");
+            }
+
+            if (!teamRepository.existsById(teamID)){
+                return ResponseEntity.status(400).body("Не найдена команда с таким ID!");
+            }
+
+            Optional<Team> teamOpt = teamRepository.findById(teamID);
+
+            if (teamOpt.isPresent()) {
+
+                Team team = teamOpt.get();
+
+                if (!(team.getLeader().getId() == userID)){
+                    return ResponseEntity.status(400).body("У вас нет прав для удаления этой команды!");
+                }
+
+                teamRepository.delete(team);
+
+                return ResponseEntity.status(200).body("Команда была успешно удалена!");
+            }
+            else return ResponseEntity.status(500).body("Ошибка при загрузке информации о команде!");
 
         }
         catch (Exception e){
@@ -97,8 +131,18 @@ public class TeamService {
             if (teamOpt.isPresent()){
 
                 Team team = teamOpt.get();
+                Event event = team.getEvent();
+
+                if (event.getStatus().equals("STARTED") || event.getStatus().equals("ENDED")){
+                    return ResponseEntity.status(400).body("В данном мероприятии уже нельзя принять участие, так как оно уже началось/закончилось!");
+                }
 
                 List<Long> enterRequests = new ArrayList<>();
+
+                if (team.getCountOfMembers() >= event.getMaxMembers()){
+                    return ResponseEntity.status(400).body("В данной команде не осталось свободных мест!");
+                }
+
                 if (team.getEnterRequest() != null){
                     enterRequests = team.getEnterRequest();
                     enterRequests.add(userID);
@@ -149,11 +193,25 @@ public class TeamService {
                     return ResponseEntity.status(400).body("Пользователь не состоит в данной команде!");
                 }
 
+                if ((team.getLeader().getId() == userID) && (team.getCountOfMembers() != 1)){
+                    return ResponseEntity.status(400).body("Так как вы являетесь лидером команды, вы не можете покинуть её пока в ней есть кто-то помимо вас!");
+                }
+
                 team.getMembers().remove(user);
+                team.setCountOfMembers(team.getCountOfMembers() - 1);
 
-                teamRepository.save(team);
+                boolean deleted = false;
 
-                return ResponseEntity.status(200).body("Команда успешно покинута!");
+                if (team.getCountOfMembers() == 0){
+                    teamRepository.delete(team);
+                    deleted = true;
+                }
+                else teamRepository.save(team);
+
+                return deleted
+                        ? ResponseEntity.status(200).body("Команда успешно покинута и она была удалена, потому что вы были последним участником!")
+                        : ResponseEntity.status(200).body("Команда успешно покинута!");
+
             }
 
             return ResponseEntity.status(500).body("Ошибка при получении информации о пользователе!");
@@ -188,6 +246,15 @@ public class TeamService {
                 Team team = teamOpt.get();
                 User user = userOpt.get();
 
+                Event event = team.getEvent();
+
+                if (event.getStatus().equals("STARTED") || event.getStatus().equals("ENDED")){
+                    return ResponseEntity.status(400).body("Вы не можете менять состав команды, так как мероприятие уже началось/закончилось!");
+                }
+
+                if (team.getCountOfMembers() >= event.getMaxMembers()){
+                    return ResponseEntity.status(400).body("В данной команде не осталось свободных мест!");
+                }
 
                 if (leader == team.getLeader()) {
 
@@ -195,6 +262,8 @@ public class TeamService {
                     team.getMembers().add(user);
 
                     team.getEnterRequest().remove(Long.valueOf(userID));
+
+                    team.setCountOfMembers(team.getCountOfMembers() + 1);
 
                     teamRepository.save(team);
 

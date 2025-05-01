@@ -23,6 +23,16 @@ public class AdminTeamController {
         }
     }
 
+    @DeleteMapping("/delete/{teamID}")
+    public ResponseEntity<String> deleteTeam(@PathVariable Long teamID){
+        try{
+            return teamService.deleteTeam(teamID);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/accept/{teamID}/{userID}")
     public ResponseEntity<String> acceptMember(@PathVariable Long userID,@PathVariable Long teamID){
         try{
