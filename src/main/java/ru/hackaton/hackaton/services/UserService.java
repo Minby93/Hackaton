@@ -23,6 +23,10 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     /**
+     * Добавить метод для получения всех пользователей
+     */
+
+    /**
      * Создание пользователя
      */
     public ResponseEntity<String> createUser(User newUser){

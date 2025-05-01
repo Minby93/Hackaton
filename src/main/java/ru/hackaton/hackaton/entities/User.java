@@ -16,6 +16,16 @@ import java.util.List;
 @Builder
 public class User {
 
+    /**
+     * По хорошему использовать UserDTO для GET методов
+     *
+     * Так же нужно ограничить взаимодействие с EventController путём выдачи пользователям,
+     * которые будут управлять мероприятиями роли EDITOR,
+     * соответственно нужно будет добавить проверку наличия данной роли у пользователя
+     *
+     * Подумать как использовать роль ADMIN
+     */
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -49,7 +59,7 @@ public class User {
                 "\"password\":\"" + (password != null ? password : "") + "\"," + // Маскируем пароль
                 "\"username\":\"" + (username != null ? username : "") + "\"," +
                 "\"fullName\":\"" + (fullName != null ? fullName : "") + "\"," +
-                "\"role\":" + (role != null ? "\"" + role + "\"" : "null") + "\"," +
+                "\"role\":" + (role != null ? "\"" + role + "\"" : "null") +
                 "\"createdAt\":" + (createdAt != null ? "\"" + createdAt + "\"" : "null") +
                 "}";
     }

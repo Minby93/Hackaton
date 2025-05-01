@@ -23,6 +23,10 @@ public class EventService {
     private UserService userService;
 
     /**
+     * Добавить метод для получения всех мероприятий
+     */
+
+    /**
      * Создание мероприятия
      */
     public ResponseEntity<String> createEvent(Event newEvent){
