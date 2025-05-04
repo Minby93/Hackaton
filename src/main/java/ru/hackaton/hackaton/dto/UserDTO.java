@@ -6,6 +6,7 @@ import ru.hackaton.hackaton.enums.Role;
 
 import java.util.List;
 
+
 @Data
 public class UserDTO {
     private Long id;
@@ -22,5 +23,16 @@ public class UserDTO {
         dto.setFullName(user.getFullName());
         dto.setRole(user.getRole());
         return dto;
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"id\":" + id + "," +
+                "\"email\":\"" + (email != null ? email : null)  + "\"," +
+                "\"username\":\"" + (username != null ? username : null)+ "\"," +
+                "\"fullName\":\"" + (fullName != null ? fullName : null) + "\"," +
+                "\"role\":\"" + (role != null ? role : null) + "\"" +
+                '}';
     }
 }

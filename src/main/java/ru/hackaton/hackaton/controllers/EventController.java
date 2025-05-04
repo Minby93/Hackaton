@@ -54,5 +54,15 @@ public class EventController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<String> getAllEvents(){
+        try{
+            return eventService.getAllEvents();
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 
 }

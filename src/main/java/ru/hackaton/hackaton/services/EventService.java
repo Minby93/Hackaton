@@ -5,9 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.hackaton.hackaton.entities.Event;
 import ru.hackaton.hackaton.entities.User;
+import ru.hackaton.hackaton.enums.Role;
 import ru.hackaton.hackaton.repositories.EventRepository;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +35,10 @@ public class EventService {
         try{
 
             User admin = userService.getCurrentUser();
+
+            if (!admin.getRole().contains(Role.valueOf("EDITOR"))){
+                return ResponseEntity.status(400).body("У вас нет прав на создание мероприятий!");
+            }
 
             if (eventRepository.existsByName(newEvent.getName())){
                 return ResponseEntity.status(400).body("Мероприятие с таким названием уже существует!");
@@ -162,6 +168,20 @@ public class EventService {
 
             return ResponseEntity.status(500).body("Ошибка при получении информации о мероприятии!");
 
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Получение всех мероприятий
+     */
+    public ResponseEntity<String> getAllEvents(){
+        try {
+            List<Event> events = eventRepository.findAll();
+
+            return ResponseEntity.status(200).body(events.toString());
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

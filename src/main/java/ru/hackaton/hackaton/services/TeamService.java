@@ -364,9 +364,9 @@ public class TeamService {
     public ResponseEntity<String> getAllTeams(){
         try{
 
-            List<Team> teamOpt = teamRepository.findAll();
+            List<Team> team = teamRepository.findAll();
 
-            return ResponseEntity.status(200).body(teamOpt.toString());
+            return ResponseEntity.status(200).body(team.toString());
 
         }
         catch (Exception e){

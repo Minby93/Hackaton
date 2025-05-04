@@ -6,11 +6,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.hackaton.hackaton.configs.MyUserDetails;
+import ru.hackaton.hackaton.dto.UserDTO;
 import ru.hackaton.hackaton.entities.User;
 import ru.hackaton.hackaton.enums.Role;
 import ru.hackaton.hackaton.repositories.UserRepository;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -104,12 +106,27 @@ public class UserService {
 
                 User user = userOpt.get();
 
-                return ResponseEntity.status(200).body(user.toString());
+                return ResponseEntity.status(200).body(UserDTO.fromEntity(user).toString());
 
             }
             else {
                 return ResponseEntity.status(500).body("Не удалось найти пользователя!");
             }
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Получение всех пользователей
+     */
+    public ResponseEntity<String> getAllUser(){
+        try{
+
+            List<User> users = userRepository.findAll();
+
+            return ResponseEntity.status(200).body(users.stream().map(UserDTO::fromEntity).toList().toString());
         }
         catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());

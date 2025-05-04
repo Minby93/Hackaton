@@ -1,4 +1,3 @@
-/*
 package ru.hackaton.hackaton.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +9,9 @@ import java.io.IOException;
 @Service
 public class VMService {
 
-    private static final String BASE_VM_NAME = "base-ubuntu"; // Имя базового шаблона ВМ
+    private static final String BASE_VM_NAME = "Base_Ubuntu"; // Имя базового шаблона ВМ
     private static final String SCRIPT_PATH = "/path/to/setup-vm.sh"; // Путь к скрипту настройки ВМ
-    private static final String SSH_USER = "ubuntu"; // Стартовый пользователь в базовой ВМ
+    private static final String SSH_USER = "user"; // Стартовый пользователь в базовой ВМ
     private static final String SSH_KEY_PATH = "/path/to/private_key"; // Путь к приватному SSH-ключу (если нужен)
     @Autowired
     private UserService userService;
@@ -64,4 +63,3 @@ public class VMService {
     }
 
 }
-*/

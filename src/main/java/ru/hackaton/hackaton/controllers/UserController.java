@@ -15,22 +15,53 @@ public class UserController {
 
     @PostMapping("/registration")
     public ResponseEntity<String> createUser(@RequestBody User user){
-        return userService.createUser(user);
+        try {
+            return userService.createUser(user);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
-    @PutMapping("/update/{id}")
+    @PostMapping("/update/{id}")
     public ResponseEntity<String> updateUser(@RequestBody User user, @PathVariable Long id){
-        return userService.updateUser(user, id);
+        try {
+            return userService.updateUser(user, id);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Long id){
-        return userService.deleteUser(id);
+        try {
+            return userService.deleteUser(id);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<String> getUser(@PathVariable Long id){
-        return userService.getUser(id);
+        try {
+            return userService.getUser(id);
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<String> getAllUsers(){
+        try{
+            return userService.getAllUser();
+        }
+        catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+
     }
 
 }
